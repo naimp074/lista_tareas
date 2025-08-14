@@ -1,5 +1,6 @@
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
+import ListaTareas from './ListaTarea';
 const FormularioTarea = () => {
   return (
     <section>
@@ -16,6 +17,7 @@ const FormularioTarea = () => {
           Error al cargar una tarea
         </Form.Text>
       </Form>
+      <ListaTareas />
     </section>
   );
 };
