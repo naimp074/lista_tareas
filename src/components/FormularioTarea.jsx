@@ -1,6 +1,6 @@
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import ListaTareas from "./ListaTarea";
+import ListaTarea from "./ListaTarea";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 
@@ -11,49 +11,41 @@ const FormularioTarea = () => {
     reset,
     formState: { errors },
   } = useForm();
-
   const [tareas, setTareas] = useState([]);
 
   const posteriorValidacion = (data) => {
-    console.log(data.tarea);
-    // guardar la tarea en el array
-    setTareas([...tareas, data.tarea]);
-    // limpiar el formulario
-    reset();
-  };
+    console.log(data.tarea)
+    //guardar la tarea en el array
+    setTareas([...tareas, data.tarea])
+    //limpiar el formulario
+    reset()
+  }
 
   return (
     <section>
       <Form onSubmit={handleSubmit(posteriorValidacion)}>
         <Form.Group className="mb-3 d-flex justify-content-between">
-          <Form.Control
-            type="text"
-            placeholder="Ingresa una tarea"
-            {...register("tarea", {
-              required: "La tarea es un dato obligatorio",
-              minLength: {
+          <Form.Control type="text" placeholder="Ingresa una tarea" {...register('tarea',{
+            required: "La tarea es un dato obligatorio",
+            minLength:{
                 value: 2,
-                message: "La tarea debe tener al menos 2 caracteres",
-              },
-              maxLength: {
+                message: "La tarea debe tener al menos 2 caracteres"
+            },
+             maxLength:{
                 value: 50,
-                message: "La tarea debe tener como máximo 50 caracteres",
-              },
-            })}
-          />
+                message: "La tarea debe tener como maximo 50 caracteres"
+            }
+          })}/>
           <Button variant="primary" type="submit">
             ➕
           </Button>
         </Form.Group>
         <Form.Text className="text-danger">{errors.tarea?.message}</Form.Text>
       </Form>
-
-      {/* Le paso las tareas a la lista */}
-      <ListaTareas tareas={tareas} />
+      <ListaTarea tareas={tareas}/>
     </section>
   );
 };
 
 export default FormularioTarea;
-
 
