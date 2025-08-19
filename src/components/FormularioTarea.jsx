@@ -14,38 +14,47 @@ const FormularioTarea = () => {
   const [tareas, setTareas] = useState([]);
 
   const posteriorValidacion = (data) => {
-    console.log(data.tarea)
+    console.log(data.tarea);
     //guardar la tarea en el array
-    setTareas([...tareas, data.tarea])
+    setTareas([...tareas, data.tarea]);
     //limpiar el formulario
-    reset()
-  }
+    reset();
+  };
+  const borrarTarea = (nombreTarea) => {
+    const tareasFiltradas = tareas.filter(
+      (itemTarea) => itemTarea !== nombreTarea
+    );
+    setTareas(tareasFiltradas)
+  };
 
   return (
     <section>
       <Form onSubmit={handleSubmit(posteriorValidacion)}>
         <Form.Group className="mb-3 d-flex justify-content-between">
-          <Form.Control type="text" placeholder="Ingresa una tarea" {...register('tarea',{
-            required: "La tarea es un dato obligatorio",
-            minLength:{
+          <Form.Control
+            type="text"
+            placeholder="Ingresa una tarea"
+            {...register("tarea", {
+              required: "La tarea es un dato obligatorio",
+              minLength: {
                 value: 2,
-                message: "La tarea debe tener al menos 2 caracteres"
-            },
-             maxLength:{
+                message: "La tarea debe tener al menos 2 caracteres",
+              },
+              maxLength: {
                 value: 50,
-                message: "La tarea debe tener como maximo 50 caracteres"
-            }
-          })}/>
+                message: "La tarea debe tener como maximo 50 caracteres",
+              },
+            })}
+          />
           <Button variant="primary" type="submit">
             ➕
           </Button>
         </Form.Group>
         <Form.Text className="text-danger">{errors.tarea?.message}</Form.Text>
       </Form>
-      <ListaTarea tareas={tareas}/>
+      <ListaTarea tareas={tareas} borrarTarea={borrarTarea}/>
     </section>
   );
 };
 
 export default FormularioTarea;
-
