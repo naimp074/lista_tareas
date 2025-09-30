@@ -2,7 +2,7 @@ import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import ListaTarea from "./ListaTarea";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const FormularioTarea = () => {
   const {
@@ -11,20 +11,29 @@ const FormularioTarea = () => {
     reset,
     formState: { errors },
   } = useForm();
-  const [tareas, setTareas] = useState([]);
+
+  // Inicializamos el estado con lo que haya en localStorage
+  const [tareas, setTareas] = useState(() => {
+    return JSON.parse(localStorage.getItem("tareasKey")) || [];
+  });
+
+  // Guardamos en localStorage cada vez que cambie "tareas"
+  useEffect(() => {
+    localStorage.setItem("tareasKey", JSON.stringify(tareas));
+  }, [tareas]);
 
   const posteriorValidacion = (data) => {
-    console.log(data.tarea);
-    //guardar la tarea en el array
+    // Guardamos la tarea en el array
     setTareas([...tareas, data.tarea]);
-    //limpiar el formulario
+    // Limpiamos el formulario
     reset();
   };
+
   const borrarTarea = (nombreTarea) => {
     const tareasFiltradas = tareas.filter(
       (itemTarea) => itemTarea !== nombreTarea
     );
-    setTareas(tareasFiltradas)
+    setTareas(tareasFiltradas);
   };
 
   return (
@@ -42,7 +51,7 @@ const FormularioTarea = () => {
               },
               maxLength: {
                 value: 50,
-                message: "La tarea debe tener como maximo 50 caracteres",
+                message: "La tarea debe tener como máximo 50 caracteres",
               },
             })}
           />
@@ -52,9 +61,10 @@ const FormularioTarea = () => {
         </Form.Group>
         <Form.Text className="text-danger">{errors.tarea?.message}</Form.Text>
       </Form>
-      <ListaTarea tareas={tareas} borrarTarea={borrarTarea}/>
+      <ListaTarea tareas={tareas} borrarTarea={borrarTarea} />
     </section>
   );
 };
 
 export default FormularioTarea;
+
