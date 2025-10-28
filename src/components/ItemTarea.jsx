@@ -1,15 +1,32 @@
 import { ListGroup, Button } from "react-bootstrap";
 
-const ItemTarea = ({ tarea, borrarTarea }) => {
+const ItemTarea = ({ item, borrarTarea, editarTarea, editando }) => {
+  const estaEditando = editando?.id === item.id;
+
   return (
-    <ListGroup.Item className="d-flex justify-content-between align-items-center">
-      {tarea}
-      <Button 
-        variant="secondary" 
-        onClick={() => borrarTarea(tarea)}  
-      >
-        ❌
-      </Button>
+    <ListGroup.Item
+      className={`d-flex justify-content-between align-items-center ${
+        estaEditando ? "bg-light" : ""
+      }`}
+    >
+      {item.texto}
+      <div>
+        <Button
+          variant="warning"
+          onClick={() => editarTarea(item)}
+          disabled={!!editando && !estaEditando}
+          className="me-2"
+        >
+          ✏️
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={() => borrarTarea(item.id)}
+          disabled={!!editando}
+        >
+          ❌
+        </Button>
+      </div>
     </ListGroup.Item>
   );
 };
