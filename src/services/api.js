@@ -16,11 +16,23 @@ const API_URL = getApiUrl();
 export const obtenerTareas = async () => {
   try {
     const response = await fetch(API_URL);
-    if (!response.ok) throw new Error('Error al obtener las tareas');
-    const data = await response.json();
+    if (!response.ok) {
+      console.error('Error en la respuesta:', response.status, response.statusText);
+      return [];
+    }
+    
+    // Verificar que la respuesta tenga contenido
+    const text = await response.text();
+    if (!text) {
+      console.error('Respuesta vacía del backend');
+      return [];
+    }
+    
+    const data = JSON.parse(text);
     return data;
   } catch (error) {
     console.error('Error al obtener tareas:', error);
+    console.error('URL intentada:', API_URL);
     return [];
   }
 };
@@ -35,14 +47,27 @@ export const crearTarea = async (titulo) => {
       },
       body: JSON.stringify({ titulo, prioridad: 'media' }),
     });
+    
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.errores?.[0]?.msg || 'Error al crear la tarea');
+      const text = await response.text();
+      let errorMessage = 'Error al crear la tarea';
+      try {
+        const errorData = JSON.parse(text);
+        errorMessage = errorData.errores?.[0]?.msg || errorMessage;
+      } catch {
+        errorMessage = text || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
-    const data = await response.json();
+    
+    const text = await response.text();
+    if (!text) throw new Error('Respuesta vacía del backend');
+    
+    const data = JSON.parse(text);
     return data.tarea;
   } catch (error) {
     console.error('Error al crear tarea:', error);
+    console.error('URL intentada:', API_URL);
     throw error;
   }
 };
@@ -57,14 +82,27 @@ export const editarTarea = async (id, titulo) => {
       },
       body: JSON.stringify({ titulo, prioridad: 'media' }),
     });
+    
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.errores?.[0]?.msg || 'Error al editar la tarea');
+      const text = await response.text();
+      let errorMessage = 'Error al editar la tarea';
+      try {
+        const errorData = JSON.parse(text);
+        errorMessage = errorData.errores?.[0]?.msg || errorMessage;
+      } catch {
+        errorMessage = text || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
-    const data = await response.json();
+    
+    const text = await response.text();
+    if (!text) throw new Error('Respuesta vacía del backend');
+    
+    const data = JSON.parse(text);
     return data.tarea;
   } catch (error) {
     console.error('Error al editar tarea:', error);
+    console.error('URL intentada:', `${API_URL}/${id}`);
     throw error;
   }
 };
@@ -75,10 +113,14 @@ export const eliminarTarea = async (id) => {
     const response = await fetch(`${API_URL}/${id}`, {
       method: 'DELETE',
     });
-    if (!response.ok) throw new Error('Error al eliminar la tarea');
+    if (!response.ok) {
+      console.error('Error en DELETE:', response.status, response.statusText);
+      throw new Error('Error al eliminar la tarea');
+    }
     return true;
   } catch (error) {
     console.error('Error al eliminar tarea:', error);
+    console.error('URL intentada:', `${API_URL}/${id}`);
     throw error;
   }
 };
