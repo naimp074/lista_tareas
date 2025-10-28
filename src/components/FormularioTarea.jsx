@@ -44,11 +44,20 @@ const FormularioTarea = () => {
 
   const posteriorValidacion = async (data) => {
     try {
+      // Sanitizar el input: quitar espacios al inicio y final, y normalizar espacios múltiples
+      const tareaSanitizada = data.tarea.trim().replace(/\s+/g, ' ');
+      
       if (editando) {
+        // Validar que realmente se haya cambiado la tarea
+        if (editando.texto.trim() === tareaSanitizada) {
+          toast.info("No se realizó ningún cambio");
+          return;
+        }
+        
         // Si estamos editando, validar que el nuevo nombre no exista (excepto el actual)
         const tareaExistente = tareas.find(
           (t) => t.id !== editando.id && 
-          t.texto.toLowerCase().trim() === data.tarea.toLowerCase().trim()
+          t.texto.toLowerCase().trim() === tareaSanitizada.toLowerCase()
         );
         
         if (tareaExistente) {
@@ -57,7 +66,7 @@ const FormularioTarea = () => {
         }
         
         // Si no existe duplicado, actualizar la tarea
-        const tareaActualizada = await api.editarTarea(editando.id, data.tarea);
+        const tareaActualizada = await api.editarTarea(editando.id, tareaSanitizada);
         const tareasActualizadas = tareas.map((t) =>
           t.id === editando.id
             ? { id: tareaActualizada._id, texto: tareaActualizada.titulo }
@@ -69,7 +78,7 @@ const FormularioTarea = () => {
       } else {
         // Validar que no exista una tarea con el mismo nombre
         const tareaExistente = tareas.find(
-          (t) => t.texto.toLowerCase().trim() === data.tarea.toLowerCase().trim()
+          (t) => t.texto.toLowerCase().trim() === tareaSanitizada.toLowerCase()
         );
         
         if (tareaExistente) {
@@ -78,7 +87,7 @@ const FormularioTarea = () => {
         }
         
         // Si no estamos editando, crear nueva tarea
-        const nuevaTarea = await api.crearTarea(data.tarea);
+        const nuevaTarea = await api.crearTarea(tareaSanitizada);
         setTareas([
           ...tareas,
           { id: nuevaTarea._id, texto: nuevaTarea.titulo },
@@ -133,6 +142,19 @@ const FormularioTarea = () => {
                 value: 200,
                 message: "La tarea debe tener como máximo 200 caracteres",
               },
+              validate: {
+                notOnlySpaces: (value) => 
+                  value.trim().length >= 3 || "La tarea no puede tener solo espacios en blanco",
+                hasValidCharacters: (value) => 
+                  /[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜ]/.test(value) || 
+                  "La tarea debe contener al menos un carácter alfanumérico",
+                isDifferent: (value) => {
+                  if (editando && editando.texto.trim() === value.trim()) {
+                    return "Debes cambiar el nombre de la tarea";
+                  }
+                  return true;
+                }
+              }
             })}
           />
           <div>
