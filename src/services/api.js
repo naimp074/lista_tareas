@@ -1,8 +1,16 @@
 // En desarrollo, Vite proxy redirige /api a http://localhost:3000
 // En producción, usar la URL del backend desde variables de entorno
-const API_URL = import.meta.env.DEV 
-  ? '/api/tareas' 
-  : `${import.meta.env.VITE_API_URL}/api/tareas`;
+// Si no hay variable de entorno configurada, usar localhost como fallback
+const getApiUrl = () => {
+  if (import.meta.env.DEV) {
+    return '/api/tareas';
+  }
+  
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  return `${apiUrl}/api/tareas`;
+};
+
+const API_URL = getApiUrl();
 
 // Obtener todas las tareas
 export const obtenerTareas = async () => {
