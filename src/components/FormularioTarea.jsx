@@ -45,7 +45,18 @@ const FormularioTarea = () => {
   const posteriorValidacion = async (data) => {
     try {
       if (editando) {
-        // Si estamos editando, actualizar la tarea
+        // Si estamos editando, validar que el nuevo nombre no exista (excepto el actual)
+        const tareaExistente = tareas.find(
+          (t) => t.id !== editando.id && 
+          t.texto.toLowerCase().trim() === data.tarea.toLowerCase().trim()
+        );
+        
+        if (tareaExistente) {
+          toast.warning("¡Ya existe otra tarea con ese nombre!");
+          return;
+        }
+        
+        // Si no existe duplicado, actualizar la tarea
         const tareaActualizada = await api.editarTarea(editando.id, data.tarea);
         const tareasActualizadas = tareas.map((t) =>
           t.id === editando.id
@@ -56,6 +67,16 @@ const FormularioTarea = () => {
         toast.success("¡Tarea actualizada exitosamente!");
         setEditando(null);
       } else {
+        // Validar que no exista una tarea con el mismo nombre
+        const tareaExistente = tareas.find(
+          (t) => t.texto.toLowerCase().trim() === data.tarea.toLowerCase().trim()
+        );
+        
+        if (tareaExistente) {
+          toast.warning("¡Ya existe una tarea con ese nombre!");
+          return;
+        }
+        
         // Si no estamos editando, crear nueva tarea
         const nuevaTarea = await api.crearTarea(data.tarea);
         setTareas([
