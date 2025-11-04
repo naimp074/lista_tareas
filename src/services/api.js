@@ -1,11 +1,28 @@
 // Usar la misma estructura que el código que funciona
 // En desarrollo: usar proxy de Vite
-// En producción: usar variable de entorno VITE_API_TAREAS (URL completa)
-const API_URL = import.meta.env.DEV 
-  ? '/api/tareas' 
-  : (import.meta.env.VITE_API_TAREAS || import.meta.env.VITE_API_URL 
-    ? `${import.meta.env.VITE_API_TAREAS || import.meta.env.VITE_API_URL}/api/tareas`
-    : '/api/tareas');
+// En producción: usar variable de entorno VITE_API_TAREAS (URL completa) o VITE_API_URL (URL base)
+const getApiUrl = () => {
+  if (import.meta.env.DEV) {
+    return '/api/tareas';
+  }
+  
+  // Si hay VITE_API_TAREAS (URL completa con /api/tareas), usarla directamente
+  if (import.meta.env.VITE_API_TAREAS) {
+    return import.meta.env.VITE_API_TAREAS;
+  }
+  
+  // Si hay VITE_API_URL (URL base), agregar /api/tareas
+  if (import.meta.env.VITE_API_URL) {
+    const baseUrl = import.meta.env.VITE_API_URL.trim();
+    const cleanUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    return `${cleanUrl}/api/tareas`;
+  }
+  
+  // Fallback
+  return '/api/tareas';
+};
+
+const API_URL = getApiUrl();
 
 // Log para debugging (solo en producción)
 if (!import.meta.env.DEV) {
