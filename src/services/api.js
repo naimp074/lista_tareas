@@ -39,8 +39,8 @@ export const crearTarea = async (titulo) => {
       throw new Error('El título de la tarea no puede estar vacío');
     }
 
-    // Usar el mismo formato que el código que funciona: {tarea: "texto"}
-    const payload = { tarea: titulo.trim() };
+    // El backend espera {titulo: "texto"} según el modelo
+    const payload = { titulo: titulo.trim() };
     console.log('📤 Enviando POST a:', API_URL);
     console.log('📦 Payload:', payload);
 
@@ -119,13 +119,13 @@ export const crearTarea = async (titulo) => {
 // Editar una tarea
 export const editarTarea = async (id, titulo) => {
   try {
-    // Usar el mismo formato que el código que funciona: {tarea: "texto"}
+    // El backend espera {titulo: "texto"} según el modelo
     const response = await fetch(`${API_URL}/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ tarea: titulo.trim() }),
+      body: JSON.stringify({ titulo: titulo.trim() }),
     });
     
     if (!response.ok) {

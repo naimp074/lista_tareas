@@ -72,8 +72,8 @@ const FormularioTarea = () => {
 
   const editarTarea = (item) => {
     setEditando(item);
-    // Usar el mismo formato que el código que funciona
-    reset({ tarea: item.tarea || item.titulo || item.texto });
+    // El backend devuelve titulo, pero el formulario usa 'tarea'
+    reset({ tarea: item.titulo || item.tarea || item.texto });
   };
 
   const cancelarEdicion = () => {
