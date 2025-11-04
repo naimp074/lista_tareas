@@ -17,7 +17,17 @@ export const obtenerTareas = async () => {
   try {
     const response = await fetch(API_URL);
     if (!response.ok) {
+      const text = await response.text();
       console.error('Error en la respuesta:', response.status, response.statusText);
+      console.error('Respuesta del servidor:', text);
+      
+      if (response.status === 500) {
+        console.error('ERROR 500: El backend tiene un error interno. Verifica que:');
+        console.error('1. El backend esté ejecutándose');
+        console.error('2. MongoDB esté conectado');
+        console.error('3. El backend no tenga errores en la consola');
+      }
+      
       return [];
     }
     
@@ -33,6 +43,7 @@ export const obtenerTareas = async () => {
   } catch (error) {
     console.error('Error al obtener tareas:', error);
     console.error('URL intentada:', API_URL);
+    console.error('¿Está el backend ejecutándose en http://localhost:3000?');
     return [];
   }
 };
@@ -51,12 +62,26 @@ export const crearTarea = async (titulo) => {
     if (!response.ok) {
       const text = await response.text();
       let errorMessage = 'Error al crear la tarea';
-      try {
-        const errorData = JSON.parse(text);
-        errorMessage = errorData.errores?.[0]?.msg || errorMessage;
-      } catch {
-        errorMessage = text || errorMessage;
+      
+      console.error('Error en POST:', response.status, response.statusText);
+      console.error('Respuesta del servidor:', text);
+      
+      if (response.status === 500) {
+        errorMessage = 'Error del servidor (500). Verifica que el backend esté funcionando correctamente.';
+        console.error('ERROR 500: El backend tiene un error interno.');
+        console.error('Posibles causas:');
+        console.error('- El backend no está ejecutándose');
+        console.error('- MongoDB no está conectado');
+        console.error('- Error en el código del backend');
+      } else {
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.errores?.[0]?.msg || errorData.mensaje || errorMessage;
+        } catch {
+          errorMessage = text || errorMessage;
+        }
       }
+      
       throw new Error(errorMessage);
     }
     
@@ -86,12 +111,22 @@ export const editarTarea = async (id, titulo) => {
     if (!response.ok) {
       const text = await response.text();
       let errorMessage = 'Error al editar la tarea';
-      try {
-        const errorData = JSON.parse(text);
-        errorMessage = errorData.errores?.[0]?.msg || errorMessage;
-      } catch {
-        errorMessage = text || errorMessage;
+      
+      console.error('Error en PUT:', response.status, response.statusText);
+      console.error('Respuesta del servidor:', text);
+      
+      if (response.status === 500) {
+        errorMessage = 'Error del servidor (500). Verifica que el backend esté funcionando correctamente.';
+        console.error('ERROR 500: El backend tiene un error interno.');
+      } else {
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.errores?.[0]?.msg || errorData.mensaje || errorMessage;
+        } catch {
+          errorMessage = text || errorMessage;
+        }
       }
+      
       throw new Error(errorMessage);
     }
     
@@ -114,8 +149,16 @@ export const eliminarTarea = async (id) => {
       method: 'DELETE',
     });
     if (!response.ok) {
+      const text = await response.text();
       console.error('Error en DELETE:', response.status, response.statusText);
-      throw new Error('Error al eliminar la tarea');
+      console.error('Respuesta del servidor:', text);
+      
+      let errorMessage = 'Error al eliminar la tarea';
+      if (response.status === 500) {
+        errorMessage = 'Error del servidor (500). Verifica que el backend esté funcionando correctamente.';
+      }
+      
+      throw new Error(errorMessage);
     }
     return true;
   } catch (error) {
