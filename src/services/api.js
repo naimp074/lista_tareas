@@ -1,13 +1,21 @@
 // En desarrollo, Vite proxy redirige /api a http://localhost:3000
 // En producción, usar la URL del backend desde variables de entorno
-// Si no hay variable de entorno configurada, usar localhost como fallback
+// Si no hay variable de entorno configurada, usar ruta relativa (asumiendo mismo dominio)
 const getApiUrl = () => {
   if (import.meta.env.DEV) {
     return '/api/tareas';
   }
   
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-  return `${apiUrl}/api/tareas`;
+  // En producción, si hay VITE_API_URL configurada, usarla
+  // Si no, usar ruta relativa (útil si el backend está en el mismo dominio)
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (apiUrl) {
+    return `${apiUrl}/api/tareas`;
+  }
+  
+  // Fallback: usar ruta relativa (para cuando el backend está en el mismo dominio)
+  // Si tu backend está en Vercel en un dominio diferente, configura VITE_API_URL en Netlify
+  return '/api/tareas';
 };
 
 const API_URL = getApiUrl();
