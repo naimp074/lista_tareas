@@ -20,6 +20,14 @@ const getApiUrl = () => {
 
 const API_URL = getApiUrl();
 
+// Log para debugging (solo en producción)
+if (!import.meta.env.DEV) {
+  console.log('🔧 Configuración API:');
+  console.log('VITE_API_URL:', import.meta.env.VITE_API_URL || 'NO CONFIGURADA');
+  console.log('URL final:', API_URL);
+  console.log('Modo:', import.meta.env.MODE);
+}
+
 // Obtener todas las tareas
 export const obtenerTareas = async () => {
   try {
@@ -49,9 +57,18 @@ export const obtenerTareas = async () => {
     const data = JSON.parse(text);
     return data;
   } catch (error) {
-    console.error('Error al obtener tareas:', error);
+    console.error('❌ Error al obtener tareas:', error);
     console.error('URL intentada:', API_URL);
-    console.error('¿Está el backend ejecutándose en http://localhost:3000?');
+    console.error('VITE_API_URL configurada:', import.meta.env.VITE_API_URL || 'NO');
+    console.error('Tipo de error:', error.name);
+    console.error('Mensaje:', error.message);
+    
+    // Si es un error de CORS
+    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+      console.error('🚨 ERROR DE CORS: El backend no está permitiendo peticiones desde este dominio');
+      console.error('Verifica que el backend tenga CORS configurado para aceptar tu dominio de Netlify');
+    }
+    
     return [];
   }
 };
