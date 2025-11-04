@@ -17,7 +17,7 @@ const FormularioTarea = () => {
 
   const [tareas, setTareas] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [editando, setEditando] = useState(null); // Para saber qué tarea se está editando
+  const [editando, setEditando] = useState(null);
 
   // Cargar tareas al montar el componente
   useEffect(() => {
@@ -28,12 +28,12 @@ const FormularioTarea = () => {
     try {
       setCargando(true);
       const tareasData = await api.obtenerTareas();
-      // Convertir a formato simple de string
-      const tareasSimples = tareasData.map((tarea) => ({
-        id: tarea._id,
-        texto: tarea.titulo,
-      }));
-      setTareas(tareasSimples);
+      // Usar el mismo formato que el código que funciona
+      if (tareasData && Array.isArray(tareasData)) {
+        setTareas(tareasData);
+      } else {
+        setTareas([]);
+      }
     } catch (error) {
       console.error("Error al cargar tareas:", error);
       toast.error("Error al cargar las tareas");
@@ -48,51 +48,20 @@ const FormularioTarea = () => {
       const tareaSanitizada = data.tarea.trim().replace(/\s+/g, ' ');
       
       if (editando) {
-        // Validar que realmente se haya cambiado la tarea
-        if (editando.texto.trim() === tareaSanitizada) {
-          toast.info("No se realizó ningún cambio");
-          return;
+        // Si estamos editando, actualizar la tarea
+        const respuesta = await api.editarTarea(editando._id, tareaSanitizada);
+        if (respuesta) {
+          await cargarTareas(); // Recargar desde el backend
+          toast.success("¡Tarea actualizada exitosamente!");
+          setEditando(null);
         }
-        
-        // Si estamos editando, validar que el nuevo nombre no exista (excepto el actual)
-        const tareaExistente = tareas.find(
-          (t) => t.id !== editando.id && 
-          t.texto.toLowerCase().trim() === tareaSanitizada.toLowerCase()
-        );
-        
-        if (tareaExistente) {
-          toast.warning("¡Ya existe otra tarea con ese nombre!");
-          return;
-        }
-        
-        // Si no existe duplicado, actualizar la tarea
-        const tareaActualizada = await api.editarTarea(editando.id, tareaSanitizada);
-        const tareasActualizadas = tareas.map((t) =>
-          t.id === editando.id
-            ? { id: tareaActualizada._id, texto: tareaActualizada.titulo }
-            : t
-        );
-        setTareas(tareasActualizadas);
-        toast.success("¡Tarea actualizada exitosamente!");
-        setEditando(null);
       } else {
-        // Validar que no exista una tarea con el mismo nombre
-        const tareaExistente = tareas.find(
-          (t) => t.texto.toLowerCase().trim() === tareaSanitizada.toLowerCase()
-        );
-        
-        if (tareaExistente) {
-          toast.warning("¡Ya existe una tarea con ese nombre!");
-          return;
-        }
-        
         // Si no estamos editando, crear nueva tarea
-        const nuevaTarea = await api.crearTarea(tareaSanitizada);
-        setTareas([
-          ...tareas,
-          { id: nuevaTarea._id, texto: nuevaTarea.titulo },
-        ]);
-        toast.success("¡Tarea creada exitosamente!");
+        const respuesta = await api.crearTarea(tareaSanitizada);
+        if (respuesta) {
+          await cargarTareas(); // Recargar desde el backend
+          toast.success("¡Tarea creada exitosamente!");
+        }
       }
       reset();
     } catch (error) {
@@ -103,7 +72,8 @@ const FormularioTarea = () => {
 
   const editarTarea = (item) => {
     setEditando(item);
-    reset({ tarea: item.texto });
+    // Usar el mismo formato que el código que funciona
+    reset({ tarea: item.tarea || item.titulo || item.texto });
   };
 
   const cancelarEdicion = () => {
@@ -113,10 +83,11 @@ const FormularioTarea = () => {
 
   const borrarTarea = async (tareaId) => {
     try {
-      await api.eliminarTarea(tareaId);
-      const tareasFiltradas = tareas.filter((t) => t.id !== tareaId);
-      setTareas(tareasFiltradas);
-      toast.success("Tarea eliminada exitosamente!");
+      const respuesta = await api.eliminarTarea(tareaId);
+      if (respuesta) {
+        await cargarTareas(); // Recargar desde el backend
+        toast.success("Tarea eliminada exitosamente!");
+      }
     } catch (error) {
       console.error("Error al eliminar tarea:", error);
       toast.error("Error al eliminar la tarea");
@@ -186,7 +157,6 @@ const FormularioTarea = () => {
           tareas={tareas}
           borrarTarea={borrarTarea}
           editarTarea={editarTarea}
-          editando={editando}
         />
       )}
     </section>

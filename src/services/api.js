@@ -1,24 +1,11 @@
-// En desarrollo, Vite proxy redirige /api a http://localhost:3000
-// En producción, usar la URL del backend desde variables de entorno
-// Si no hay variable de entorno configurada, usar ruta relativa (asumiendo mismo dominio)
-const getApiUrl = () => {
-  if (import.meta.env.DEV) {
-    return '/api/tareas';
-  }
-  
-  // En producción, si hay VITE_API_URL configurada, usarla
-  // Si no, usar ruta relativa (útil si el backend está en el mismo dominio)
-  const apiUrl = import.meta.env.VITE_API_URL;
-  if (apiUrl) {
-    return `${apiUrl}/api/tareas`;
-  }
-  
-  // Fallback: usar ruta relativa (para cuando el backend está en el mismo dominio)
-  // Si tu backend está en Vercel en un dominio diferente, configura VITE_API_URL en Netlify
-  return '/api/tareas';
-};
-
-const API_URL = getApiUrl();
+// Usar la misma estructura que el código que funciona
+// En desarrollo: usar proxy de Vite
+// En producción: usar variable de entorno VITE_API_TAREAS (URL completa)
+const API_URL = import.meta.env.DEV 
+  ? '/api/tareas' 
+  : (import.meta.env.VITE_API_TAREAS || import.meta.env.VITE_API_URL 
+    ? `${import.meta.env.VITE_API_TAREAS || import.meta.env.VITE_API_URL}/api/tareas`
+    : '/api/tareas');
 
 // Log para debugging (solo en producción)
 if (!import.meta.env.DEV) {
@@ -28,47 +15,18 @@ if (!import.meta.env.DEV) {
   console.log('Modo:', import.meta.env.MODE);
 }
 
-// Obtener todas las tareas
+// Obtener todas las tareas - simplificado como el código que funciona
 export const obtenerTareas = async () => {
   try {
-    const response = await fetch(API_URL);
-    if (!response.ok) {
-      const text = await response.text();
-      console.error('Error en la respuesta:', response.status, response.statusText);
-      console.error('Respuesta del servidor:', text);
-      
-      if (response.status === 500) {
-        console.error('ERROR 500: El backend tiene un error interno. Verifica que:');
-        console.error('1. El backend esté ejecutándose');
-        console.error('2. MongoDB esté conectado');
-        console.error('3. El backend no tenga errores en la consola');
-      }
-      
+    const respuesta = await fetch(API_URL);
+    if (!respuesta.ok) {
+      console.error('Error al obtener tareas:', respuesta.status, respuesta.statusText);
       return [];
     }
-    
-    // Verificar que la respuesta tenga contenido
-    const text = await response.text();
-    if (!text) {
-      console.error('Respuesta vacía del backend');
-      return [];
-    }
-    
-    const data = JSON.parse(text);
-    return data;
+    const data = await respuesta.json();
+    return data || [];
   } catch (error) {
-    console.error('❌ Error al obtener tareas:', error);
-    console.error('URL intentada:', API_URL);
-    console.error('VITE_API_URL configurada:', import.meta.env.VITE_API_URL || 'NO');
-    console.error('Tipo de error:', error.name);
-    console.error('Mensaje:', error.message);
-    
-    // Si es un error de CORS
-    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
-      console.error('🚨 ERROR DE CORS: El backend no está permitiendo peticiones desde este dominio');
-      console.error('Verifica que el backend tenga CORS configurado para aceptar tu dominio de Netlify');
-    }
-    
+    console.error('Error al obtener tareas:', error);
     return [];
   }
 };
@@ -81,7 +39,8 @@ export const crearTarea = async (titulo) => {
       throw new Error('El título de la tarea no puede estar vacío');
     }
 
-    const payload = { titulo: titulo.trim(), prioridad: 'media' };
+    // Usar el mismo formato que el código que funciona: {tarea: "texto"}
+    const payload = { tarea: titulo.trim() };
     console.log('📤 Enviando POST a:', API_URL);
     console.log('📦 Payload:', payload);
 
@@ -147,7 +106,8 @@ export const crearTarea = async (titulo) => {
     
     const data = JSON.parse(text);
     console.log('✅ Tarea creada exitosamente:', data);
-    return data.tarea;
+    // Retornar la tarea completa (como el código que funciona)
+    return data.tarea || data;
   } catch (error) {
     console.error('❌ Error al crear tarea:', error);
     console.error('🌐 URL intentada:', API_URL);
@@ -159,12 +119,13 @@ export const crearTarea = async (titulo) => {
 // Editar una tarea
 export const editarTarea = async (id, titulo) => {
   try {
+    // Usar el mismo formato que el código que funciona: {tarea: "texto"}
     const response = await fetch(`${API_URL}/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ titulo, prioridad: 'media' }),
+      body: JSON.stringify({ tarea: titulo.trim() }),
     });
     
     if (!response.ok) {
@@ -193,7 +154,8 @@ export const editarTarea = async (id, titulo) => {
     if (!text) throw new Error('Respuesta vacía del backend');
     
     const data = JSON.parse(text);
-    return data.tarea;
+    // Retornar la tarea completa (como el código que funciona)
+    return data.tarea || data;
   } catch (error) {
     console.error('Error al editar tarea:', error);
     console.error('URL intentada:', `${API_URL}/${id}`);
@@ -226,4 +188,3 @@ export const eliminarTarea = async (id) => {
     throw error;
   }
 };
-
