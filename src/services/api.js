@@ -76,34 +76,66 @@ export const obtenerTareas = async () => {
 // Crear una nueva tarea
 export const crearTarea = async (titulo) => {
   try {
+    // Validar que el título no esté vacío
+    if (!titulo || !titulo.trim()) {
+      throw new Error('El título de la tarea no puede estar vacío');
+    }
+
+    const payload = { titulo: titulo.trim(), prioridad: 'media' };
+    console.log('📤 Enviando POST a:', API_URL);
+    console.log('📦 Payload:', payload);
+
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ titulo, prioridad: 'media' }),
+      body: JSON.stringify(payload),
     });
+    
+    console.log('📥 Respuesta recibida:', response.status, response.statusText);
     
     if (!response.ok) {
       const text = await response.text();
       let errorMessage = 'Error al crear la tarea';
+      let errorDetails = null;
       
-      console.error('Error en POST:', response.status, response.statusText);
-      console.error('Respuesta del servidor:', text);
+      console.error('❌ Error en POST:', response.status, response.statusText);
+      console.error('📄 Respuesta del servidor:', text);
+      
+      try {
+        errorDetails = JSON.parse(text);
+        console.error('📋 Detalles del error:', errorDetails);
+      } catch (e) {
+        console.error('⚠️ No se pudo parsear la respuesta como JSON');
+      }
       
       if (response.status === 500) {
-        errorMessage = 'Error del servidor (500). Verifica que el backend esté funcionando correctamente.';
-        console.error('ERROR 500: El backend tiene un error interno.');
+        // Intentar obtener más detalles del error
+        if (errorDetails) {
+          if (errorDetails.error) {
+            errorMessage = `Error del servidor: ${errorDetails.error}`;
+          } else if (errorDetails.mensaje) {
+            errorMessage = errorDetails.mensaje;
+          }
+        }
+        
+        if (errorDetails?.error === 'MongoDB no está conectado') {
+          errorMessage = 'Error de conexión con la base de datos. El backend no puede conectarse a MongoDB.';
+        }
+        
+        console.error('🚨 ERROR 500: El backend tiene un error interno.');
         console.error('Posibles causas:');
-        console.error('- El backend no está ejecutándose');
-        console.error('- MongoDB no está conectado');
-        console.error('- Error en el código del backend');
+        console.error('1. MongoDB no está conectado en Vercel');
+        console.error('2. Falta la variable MONGODB_URI en Vercel');
+        console.error('3. Error en el código del backend');
+        console.error('4. Los datos enviados no son válidos');
       } else {
-        try {
-          const errorData = JSON.parse(text);
-          errorMessage = errorData.errores?.[0]?.msg || errorData.mensaje || errorMessage;
-        } catch {
-          errorMessage = text || errorMessage;
+        // Error de validación (400)
+        if (errorDetails?.errores && errorDetails.errores.length > 0) {
+          errorMessage = errorDetails.errores[0].msg || errorMessage;
+        } else if (errorDetails?.mensaje) {
+          errorMessage = errorDetails.mensaje;
         }
       }
       
@@ -114,10 +146,12 @@ export const crearTarea = async (titulo) => {
     if (!text) throw new Error('Respuesta vacía del backend');
     
     const data = JSON.parse(text);
+    console.log('✅ Tarea creada exitosamente:', data);
     return data.tarea;
   } catch (error) {
-    console.error('Error al crear tarea:', error);
-    console.error('URL intentada:', API_URL);
+    console.error('❌ Error al crear tarea:', error);
+    console.error('🌐 URL intentada:', API_URL);
+    console.error('📊 Variable VITE_API_URL:', import.meta.env.VITE_API_URL || 'NO CONFIGURADA');
     throw error;
   }
 };
